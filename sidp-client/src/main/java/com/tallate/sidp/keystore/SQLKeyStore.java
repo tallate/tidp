@@ -1,10 +1,11 @@
-package com.tallate.sidp.store;
+package com.tallate.sidp.keystore;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tallate.sidp.ExceptionMsgs;
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;
+import com.tallate.sidp.util.NamedThreadFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,6 +13,10 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -37,6 +42,30 @@ public class SQLKeyStore implements KeyStore {
     private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state from idpkey where id = ? or key_state in (";
     private static final String QUERY_INSTATES_LOCKSQL_SUFFIX = ") for update";
     private static final String DELETE_SQL = "delete from idpkey where id = ?;";
+    private static final String CLEANUP_SQL = "delete from idpkey where created_time < date_add(now(), interval -5 minute);";
+
+    private static final ScheduledExecutorService CLEANUP_POOL = Executors
+            .newScheduledThreadPool(1, new NamedThreadFactory("idp-cleanup"));
+
+    private class CleanupTask implements Runnable {
+
+        @Override
+        public void run() {
+            try {
+                Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(CLEANUP_SQL);
+                pstmt.executeUpdate();
+            } catch (SQLException cause) {
+                log.error(ExceptionMsgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
+            }
+        }
+    }
+
+    @PostConstruct
+    public void init() {
+        // 每隔5分钟清理一次过期sidp
+        CLEANUP_POOL.scheduleAtFixedRate(new CleanupTask(), EXPIRE_TIME, EXPIRE_TIME, TimeUnit.SECONDS);
+    }
 
     @Override
     public void replace(IdpKey k) throws KeyStoreException {
@@ -48,7 +77,7 @@ public class SQLKeyStore implements KeyStore {
             pstmt.setString(3, k.getKeyState().toString());
             pstmt.executeUpdate();
         } catch (SQLException cause) {
-            throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+            throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
         }
     }
 
@@ -83,8 +112,8 @@ public class SQLKeyStore implements KeyStore {
             conn.commit();
             return new Pair<>(oldK, updatedCount);
         } catch (SQLException cause) {
-            log.error(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
-            throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+            log.error(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
+            throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
         }
     }
 
@@ -152,7 +181,7 @@ public class SQLKeyStore implements KeyStore {
             conn.commit();
             return new Pair<>(oldK, updatedCount);
         } catch (SQLException cause) {
-            throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+            throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
         }
     }
 
@@ -165,8 +194,8 @@ public class SQLKeyStore implements KeyStore {
             pstmt.setString(1, id);
             pstmt.executeUpdate();
         } catch (SQLException cause) {
-            log.error(ExceptionMsgs.IDPKEY_SQLSTORE_DELETE_EXCEPTION, id, cause);
-            throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_DELETE_EXCEPTION, id, cause);
+            log.error(ExceptionMsgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
+            throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
         }
     }
 }

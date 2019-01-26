@@ -1,10 +1,12 @@
-package com.tallate.sidp;
+package com.tallate.sidp.spring;
 
+import com.tallate.sidp.ExceptionMsgs;
+import com.tallate.sidp.SignatureWrapper;
 import com.tallate.sidp.idpchecker.IdpChecker;
 import com.tallate.sidp.idpchecker.RejectException;
 import com.tallate.sidp.keyprovider.KeyGenException;
-import com.tallate.sidp.spring.IdpException;
-import com.tallate.sidp.store.KeyStoreException;
+import com.tallate.sidp.IdpException;
+import com.tallate.sidp.keystore.KeyStoreException;
 import lombok.Data;
 
 @Data

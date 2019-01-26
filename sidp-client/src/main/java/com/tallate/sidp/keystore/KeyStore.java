@@ -1,4 +1,4 @@
-package com.tallate.sidp.store;
+package com.tallate.sidp.keystore;
 
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;
@@ -11,6 +11,11 @@ import java.util.Set;
  * @date 1/18/19
  */
 public interface KeyStore {
+
+  /**
+   * 超时时间，超过则清除
+   */
+  long EXPIRE_TIME = 300;
 
   void replace(IdpKey k) throws KeyStoreException;
 

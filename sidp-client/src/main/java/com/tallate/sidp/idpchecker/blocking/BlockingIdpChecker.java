@@ -6,7 +6,7 @@ import com.tallate.sidp.KeyState;
 import com.tallate.sidp.idpchecker.BaseIdpChecker;
 import com.tallate.sidp.idpchecker.RejectException;
 import com.tallate.sidp.keyprovider.KeyGenException;
-import com.tallate.sidp.store.KeyStoreException;
+import com.tallate.sidp.keystore.KeyStoreException;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;

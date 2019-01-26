@@ -1,6 +1,5 @@
 package com.tallate.sidp.spring;
 
-import com.tallate.sidp.IdpInterceptor;
 import com.tallate.sidp.SignatureWrapper;
 import lombok.Data;
 import lombok.experimental.Accessors;

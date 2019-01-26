@@ -1,4 +1,4 @@
-package com.tallate.sidp.store;
+package com.tallate.sidp.keystore;
 
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;

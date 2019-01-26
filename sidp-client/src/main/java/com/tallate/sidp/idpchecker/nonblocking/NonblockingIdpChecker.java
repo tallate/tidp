@@ -6,7 +6,7 @@ import com.tallate.sidp.KeyState;
 import com.tallate.sidp.idpchecker.BaseIdpChecker;
 import com.tallate.sidp.idpchecker.RejectException;
 import com.tallate.sidp.keyprovider.KeyGenException;
-import com.tallate.sidp.store.KeyStoreException;
+import com.tallate.sidp.keystore.KeyStoreException;
 import com.tallate.sidp.util.StringJoinerUtil;
 import java.util.HashSet;
 import java.util.Set;

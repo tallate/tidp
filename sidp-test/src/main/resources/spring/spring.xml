@@ -6,11 +6,21 @@
         http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd"
   default-lazy-init="true">
 
+    <import resource="classpath*:spring/mysql.xml"/>
+    <import resource="classpath*:spring/redis.xml"/>
+
     <!--<bean id="keyProvider" class="com.tallate.sidp.keyprovider.DefaultKeyProvider"/>-->
     <bean id="keyProvider" class="com.tallate.test.keyprovider.SpanIdKeyProvider"/>
 
-    <bean id="keyStore" class="com.tallate.sidp.store.SQLKeyStore">
+    <!--<bean id="keyStore" class="com.tallate.sidp.keystore.SQLKeyStore">
         <property name="dataSource" ref="idpDataSource"/>
+    </bean>-->
+    <bean id="keyStore" class="com.tallate.sidp.keystore.RedisKeyStore">
+        <property name="redisClient" ref="redisClient"/>
+    </bean>
+
+    <bean id="redisClient" class="com.tallate.test.keystore.RedisClientImpl">
+        <property name="jedis" ref="jedisClient"/>
     </bean>
 
     <bean id="idpChecker" class="com.tallate.sidp.idpchecker.blocking.DefaultIdpChecker">
@@ -18,7 +28,7 @@
         <property name="keyStore" ref="keyStore"/>
     </bean>
 
-    <bean id="idpInterceptor" class="com.tallate.sidp.IdpInterceptor">
+    <bean id="idpInterceptor" class="com.tallate.sidp.spring.IdpInterceptor">
         <property name="idpChecker" ref="idpChecker"/>
     </bean>
 
@@ -41,31 +51,5 @@
             <aop:around method="intercept" pointcut-ref="getSpanId"/>
         </aop:aspect>
     </aop:config>
-
-    <!-- 数据源配置 -->
-    <bean id="idpDataSource" class="com.alibaba.druid.pool.DruidDataSource" destroy-method="close">
-        <!-- Connection Info -->
-        <property name="url" value="${jdbc.url}"/>
-        <property name="username" value="${jdbc.username}"/>
-        <property name="password" value="${jdbc.password}"/>
-        <property name="driverClassName" value="${jdbc.driver}"/>
-
-        <property name="defaultAutoCommit" value="true"/>
-
-        <!-- Connection Pooling Info -->
-        <property name="maxActive" value="${jdbc.pool.maxActive}"/>
-        <!--<property name="maxIdle" value="${jdbc.pool.maxIdle}"/>-->
-        <property name="minIdle" value="${jdbc.pool.minIdle}"/>
-        <property name="maxWait" value="${jdbc.pool.maxWait}"/>
-        <property name="minEvictableIdleTimeMillis"
-          value="${jdbc.pool.minEvictableIdleTimeMillis}"/>
-        <property name="removeAbandoned" value="${jdbc.pool.removeAbandoned}"/>
-        <property name="removeAbandonedTimeout" value="${jdbc.pool.removeAbandonedTimeout}"/>
-
-        <!-- 自动重连配置 -->
-        <property name="testWhileIdle" value="true"/>
-        <property name="validationQuery" value="select 1"/>
-        <property name="validationQueryTimeout" value="1"/>
-    </bean>
 
 </beans>
