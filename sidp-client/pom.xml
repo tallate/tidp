@@ -37,13 +37,6 @@
             <version>${lombok.version}</version>
         </dependency>
 
-        <!-- 元组 -->
-        <dependency>
-            <groupId>org.javatuples</groupId>
-            <artifactId>javatuples</artifactId>
-            <version>${javatuples.version}</version>
-        </dependency>
-
         <!-- guava -->
         <dependency>
             <groupId>com.google.guava</groupId>

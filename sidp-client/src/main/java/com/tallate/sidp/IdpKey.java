@@ -1,10 +1,11 @@
 package com.tallate.sidp;
 
-import java.io.Serializable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.io.Serializable;
 
 /**
  * @author tallate
@@ -19,6 +20,11 @@ public class IdpKey implements Serializable {
   private String id;
 
   private KeyState keyState;
+
+  public IdpKey(String id, String keyStateStr) {
+    this.id = id;
+    this.keyState = Enum.valueOf(KeyState.class, keyStateStr);
+  }
 
   @Override
   public String toString() {

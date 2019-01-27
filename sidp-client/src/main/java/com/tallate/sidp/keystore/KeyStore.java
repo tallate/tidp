@@ -2,7 +2,7 @@ package com.tallate.sidp.keystore;
 
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;
-import org.javatuples.Pair;
+import com.tallate.sidp.util.Pair;
 
 import java.util.Set;
 
@@ -21,7 +21,7 @@ public interface KeyStore {
 
   void remove(String id) throws KeyStoreException;
 
-  Pair<IdpKey, Integer> putIfAbsent(IdpKey k) throws KeyStoreException;
+  Pair putIfAbsent(IdpKey k) throws KeyStoreException;
 
-  Pair<IdpKey, Integer> putIfAbsentOrInStates(IdpKey k, Set<KeyState> states) throws KeyStoreException;
+  Pair putIfAbsentOrInStates(IdpKey k, Set<KeyState> states) throws KeyStoreException;
 }

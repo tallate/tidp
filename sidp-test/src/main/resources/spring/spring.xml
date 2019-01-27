@@ -20,7 +20,7 @@
     </bean>
 
     <bean id="redisClient" class="com.tallate.test.keystore.RedisClientImpl">
-        <property name="jedis" ref="jedisClient"/>
+        <property name="jedisPool" ref="jedisPool"/>
     </bean>
 
     <bean id="idpChecker" class="com.tallate.sidp.idpchecker.blocking.DefaultIdpChecker">

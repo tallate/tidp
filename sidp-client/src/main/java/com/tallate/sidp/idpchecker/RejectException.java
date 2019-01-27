@@ -14,7 +14,7 @@ public class RejectException extends Exception {
   }
 
   public RejectException(String msg, IdpKey idpKey) {
-    super(StringJoinerUtil.join(msg, " ", idpKey.toString()));
+    super(StringJoinerUtil.join(msg, " ", idpKey == null ? "" : idpKey.toString()));
   }
 
   public RejectException(String msg, Throwable cause) {

@@ -2,7 +2,7 @@ package com.tallate.sidp;
 
 /**
  * @author tallate
- * @date 1/20/19 2:55 PM
+ * @date 1/20/19
  */
 public class ExceptionMsgs {
 

@@ -2,7 +2,7 @@ package com.tallate.sidp.keystore;
 
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;
-import org.javatuples.Pair;
+import com.tallate.sidp.util.Pair;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,23 +25,23 @@ public class DefaultKeyStore implements KeyStore {
   }
 
   @Override
-  public Pair<IdpKey, Integer> putIfAbsent(IdpKey k) {
+  public Pair putIfAbsent(IdpKey k) {
     IdpKey idpKey = keys.get(k.getId());
-    if(null == idpKey) {
+    if (null == idpKey) {
       keys.put(k.getId(), k);
-      return new Pair<>(k, 0);
+      return new Pair(k, 0);
     }
-    return new Pair<>(idpKey, 1);
+    return new Pair(idpKey, 1);
   }
 
   @Override
-  public Pair<IdpKey, Integer> putIfAbsentOrInStates(IdpKey k, Set<KeyState> states) throws KeyStoreException {
+  public Pair putIfAbsentOrInStates(IdpKey k, Set<KeyState> states) throws KeyStoreException {
     IdpKey oldK = keys.get(k.getId());
-    if(null != states && states.contains(oldK.getKeyState())) {
+    if (null != states && states.contains(oldK.getKeyState())) {
       keys.put(k.getId(), k);
-      return new Pair<>(k, 0);
+      return new Pair(k, 0);
     }
-    return new Pair<>(oldK, 1);
+    return new Pair(oldK, 1);
   }
 
   @Override

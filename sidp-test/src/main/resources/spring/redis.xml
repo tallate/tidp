@@ -23,13 +23,4 @@
         <constructor-arg name="poolConfig" ref="jedisPoolConfig"/>
     </bean>
 
-    <!--因为后来决定使用sentinel模式来搭建Redis集群了，所以不能使用上边的集群配置了（因为cluster-enabled没设置，会报"ERR This instance has cluster support disabled"错误）-->
-    <!--但是下面的配置也不行，因为sentinel在每隔一段时间会重新选举，那时master可能就被选为slave了-->
-    <bean id="jedisClient" class="redis.clients.jedis.Jedis">
-        <constructor-arg name="host" value="${redis.host}"/>
-        <constructor-arg name="port" value="${redis.port}"/>
-        <property name="dataSource" ref="jedisPool"/>
-    </bean>
-
-
 </beans>
