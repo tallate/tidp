@@ -1,4 +1,4 @@
-package com.tallate.sidp.store;
+package com.tallate.sidp.keystore;
 
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.util.StringJoinerUtil;
@@ -11,6 +11,10 @@ public class KeyStoreException extends Exception {
 
   public KeyStoreException(String msg, IdpKey k) {
     super(StringJoinerUtil.join(msg, k.toString()));
+  }
+
+  public KeyStoreException(String msg, Throwable cause) {
+    super(msg, cause);
   }
 
   public KeyStoreException(String msg, String id, Throwable cause) {

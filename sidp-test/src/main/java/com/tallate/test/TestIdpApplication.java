@@ -11,7 +11,7 @@ import org.springframework.context.annotation.PropertySource;
  */
 @SpringBootApplication(scanBasePackages = {"com.tallate.test"})
 @ImportResource("classpath*:spring/*.xml")
-@PropertySource("classpath:properties/idpDatabase.properties")
+@PropertySource({"classpath:properties/mysql.properties", "classpath:properties/redis.properties"})
 public class TestIdpApplication {
 
   public static void main(String[] args) {

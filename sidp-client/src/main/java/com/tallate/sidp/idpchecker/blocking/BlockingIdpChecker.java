@@ -6,9 +6,10 @@ import com.tallate.sidp.KeyState;
 import com.tallate.sidp.idpchecker.BaseIdpChecker;
 import com.tallate.sidp.idpchecker.RejectException;
 import com.tallate.sidp.keyprovider.KeyGenException;
-import com.tallate.sidp.store.KeyStoreException;
+import com.tallate.sidp.keystore.KeyStoreException;
+import com.tallate.sidp.util.Pair;
+import com.tallate.sidp.util.StringJoinerUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.javatuples.Pair;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -32,31 +33,41 @@ public abstract class BlockingIdpChecker extends BaseIdpChecker {
     passStateSet = new HashSet<>();
   }
 
+  private static final int INIT_RETRY_INTERVAL_TIME = 50;
+  private static final int MAX_RETRY_COUNT = 3;
+
   @Override
-  public void preCheck() throws RejectException, KeyGenException, KeyStoreException, InterruptedException {
+  public void preCheck()
+      throws RejectException, KeyGenException, KeyStoreException, InterruptedException {
     String id = keyProvider.get();
     IdpKey newK = new IdpKey()
         .setId(id)
         .setKeyState(KeyState.EXECUTING);
-    IdpKey oldK;
-    int intervalTime = 50;
-    int count = 3;
-    while (count-- > 0) {
-      Pair<IdpKey, Integer> pair = keyStore.putIfAbsentOrInStates(newK, passStateSet);
-      oldK = pair.getValue0();
-      Integer updatedCount = pair.getValue1();
+    IdpKey oldK = null;
+    int intervalTime = INIT_RETRY_INTERVAL_TIME;
+    int retryCount = 0;
+    while (retryCount++ < MAX_RETRY_COUNT) {
+      Pair pair = keyStore.putIfAbsentOrInStates(newK, passStateSet);
+      oldK = pair.getIdpKey();
+      Integer updatedCount = pair.getCount();
       if (KeyState.EXECUTING == oldK.getKeyState() && updatedCount == 1) {
+        // 没有其他线程执行，保存成功
         break;
       } else if (passStateSet.contains(oldK.getKeyState())) {
+        // 存在其他线程执行失败，保存成功
         break;
       } else if (rejectStateSet.contains(oldK.getKeyState())) {
+        // 其他线程执行成功，保存失败
         throw new RejectException(ExceptionMsgs.IDP_REJECT_EXCEPTION, oldK);
-      } else if (count == 0) {
-        throw new RejectException(ExceptionMsgs.IDP_RETRYLIMIT_EXCEPTION, oldK);
       }
-      // KeyState.EXECUTING == oldK.getKeyState() && updatedCount == 0
+      // 其他线程执行中：KeyState.EXECUTING == oldK.getKeyState() && updatedCount == 0
       Thread.sleep(intervalTime);
       intervalTime *= 2;
+      log.info(StringJoinerUtil.join(">> 重试 idpKey=", newK.toString(), " count=", Integer.toString(retryCount)));
+    }
+    if (retryCount >= MAX_RETRY_COUNT) {
+      // 重试间隔时间超过阈值
+      throw new RejectException(ExceptionMsgs.IDP_RETRYLIMIT_EXCEPTION, oldK);
     }
   }
 
@@ -66,19 +77,5 @@ public abstract class BlockingIdpChecker extends BaseIdpChecker {
         .setId(keyProvider.get())
         .setKeyState(KeyState.SUCCESS);
     keyStore.replace(idpKey);
-  }
-
-  @Override
-  public void onException(Throwable cause) throws KeyStoreException, KeyGenException {
-    IdpKey idpKey = new IdpKey()
-        .setId(keyProvider.get());
-    if (RuntimeException.class.isAssignableFrom(cause.getClass())) {
-      idpKey.setKeyState(KeyState.RUNTIME_FAIL);
-      keyStore.replace(idpKey);
-    } else if (Exception.class.isAssignableFrom(cause.getClass())) {
-      idpKey.setKeyState(KeyState.FAIL);
-      keyStore.replace(idpKey);
-    }
-    // TODO 应该不会有别的情况，Error还没碰到过，但是有必要额外注意吗？
   }
 }

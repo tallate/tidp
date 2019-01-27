@@ -5,7 +5,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 
 /**
  * @author tallate
- * @date 1/19/19 2:14 AM
+ * @date 1/19/19
  */
 @AllArgsConstructor
 public class SignatureWrapper {

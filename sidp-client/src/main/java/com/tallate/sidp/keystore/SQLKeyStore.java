@@ -1,15 +1,17 @@
-package com.tallate.sidp.store;
+package com.tallate.sidp.keystore;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.tallate.sidp.ExceptionMsgs;
 import com.tallate.sidp.IdpKey;
 import com.tallate.sidp.KeyState;
+import com.tallate.sidp.util.NamedThreadFactory;
+import com.tallate.sidp.util.Pair;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
-import org.javatuples.Pair;
 
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,6 +20,9 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author tallate
@@ -38,6 +43,30 @@ public class SQLKeyStore implements KeyStore {
   private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state from idpkey where id = ? or key_state in (";
   private static final String QUERY_INSTATES_LOCKSQL_SUFFIX = ") for update";
   private static final String DELETE_SQL = "delete from idpkey where id = ?;";
+  private static final String CLEANUP_SQL = "delete from idpkey where created_time < date_add(now(), interval -5 minute);";
+
+  private static final ScheduledExecutorService CLEANUP_POOL = Executors
+      .newScheduledThreadPool(1, new NamedThreadFactory("idp-cleanup"));
+
+  private class CleanupTask implements Runnable {
+
+    @Override
+    public void run() {
+      try {
+        Connection conn = dataSource.getConnection();
+        PreparedStatement pstmt = conn.prepareStatement(CLEANUP_SQL);
+        pstmt.executeUpdate();
+      } catch (SQLException cause) {
+        log.error(ExceptionMsgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
+      }
+    }
+  }
+
+  @PostConstruct
+  public void init() {
+    // 每隔5分钟清理一次过期sidp
+    CLEANUP_POOL.scheduleAtFixedRate(new CleanupTask(), EXPIRE_TIME, EXPIRE_TIME, TimeUnit.SECONDS);
+  }
 
   @Override
   public void replace(IdpKey k) throws KeyStoreException {
@@ -49,7 +78,7 @@ public class SQLKeyStore implements KeyStore {
       pstmt.setString(3, k.getKeyState().toString());
       pstmt.executeUpdate();
     } catch (SQLException cause) {
-      throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+      throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
     }
   }
 
@@ -57,7 +86,7 @@ public class SQLKeyStore implements KeyStore {
    * 数据库中实现swap操作，使用了行锁
    */
   @Override
-  public Pair<IdpKey, Integer> putIfAbsent(IdpKey k) throws KeyStoreException {
+  public Pair putIfAbsent(IdpKey k) throws KeyStoreException {
     Preconditions.checkNotNull(k);
     try {
       Connection conn = dataSource.getConnection();
@@ -82,18 +111,27 @@ public class SQLKeyStore implements KeyStore {
         oldK = k;
       }
       conn.commit();
-      return new Pair<>(oldK, updatedCount);
+      return new Pair(oldK, updatedCount);
     } catch (SQLException cause) {
-      log.error(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
-      throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+      log.error(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
+      throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
     }
   }
 
-  Map<Set<KeyState>, String> SQL_CACHE = new HashMap<>();
+  Map<Integer, String> SQL_CACHE = new HashMap<>();
+
+  private Integer hashing(Set<KeyState> states) {
+    int hash = 0;
+    for (KeyState state : states) {
+      hash += state.getValue();
+    }
+    return hash;
+  }
 
   private String genQueryInStatesSql(Set<KeyState> states) {
     String sql;
-    if (null != (sql = SQL_CACHE.get(states))) {
+    int hash = hashing(states);
+    if (null != (sql = SQL_CACHE.get(hash))) {
       return sql;
     }
     StringBuilder sqlSB = new StringBuilder(QUERY_INSTATES_LOCKSQL_PREFIX);
@@ -106,12 +144,13 @@ public class SQLKeyStore implements KeyStore {
     }
     sqlSB.append(QUERY_INSTATES_LOCKSQL_SUFFIX);
     sql = sqlSB.toString();
-    SQL_CACHE.put(states, sql);
+    SQL_CACHE.put(hash, sql);
     return sql;
   }
 
   @Override
-  public Pair<IdpKey, Integer> putIfAbsentOrInStates(IdpKey k, Set<KeyState> states) throws KeyStoreException {
+  public Pair putIfAbsentOrInStates(IdpKey k, Set<KeyState> states)
+      throws KeyStoreException {
     Preconditions.checkNotNull(k);
     try {
       Connection conn = dataSource.getConnection();
@@ -141,9 +180,9 @@ public class SQLKeyStore implements KeyStore {
         oldK = k;
       }
       conn.commit();
-      return new Pair<>(oldK, updatedCount);
+      return new Pair(oldK, updatedCount);
     } catch (SQLException cause) {
-      throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_SAVE_EXCEPTION, k, cause);
+      throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
     }
   }
 
@@ -156,8 +195,8 @@ public class SQLKeyStore implements KeyStore {
       pstmt.setString(1, id);
       pstmt.executeUpdate();
     } catch (SQLException cause) {
-      log.error(ExceptionMsgs.IDPKEY_SQLSTORE_DELETE_EXCEPTION, id, cause);
-      throw new KeyStoreException(ExceptionMsgs.IDPKEY_SQLSTORE_DELETE_EXCEPTION, id, cause);
+      log.error(ExceptionMsgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
+      throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
     }
   }
 }

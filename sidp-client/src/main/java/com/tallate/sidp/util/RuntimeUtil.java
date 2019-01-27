@@ -2,7 +2,7 @@ package com.tallate.sidp.util;
 
 /**
  * @author tallate
- * @date 1/20/19 2:13 PM
+ * @date 1/20/19
  */
 public class RuntimeUtil {
 

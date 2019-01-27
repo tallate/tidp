@@ -1,4 +1,4 @@
-package com.tallate.sidp.spring;
+package com.tallate.sidp;
 
 /**
  * @author tallate

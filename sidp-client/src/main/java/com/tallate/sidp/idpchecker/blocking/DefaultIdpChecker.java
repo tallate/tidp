@@ -13,6 +13,7 @@ public class DefaultIdpChecker extends BlockingIdpChecker {
 
   public DefaultIdpChecker() {
     rejectStateSet.add(KeyState.SUCCESS);
+    rejectStateSet.add(KeyState.RUNTIME_FAIL);
     passStateSet.add(KeyState.FAIL);
   }
 }

@@ -1,7 +1,7 @@
 package com.tallate.sidp.idpchecker;
 
 import com.tallate.sidp.keyprovider.KeyGenException;
-import com.tallate.sidp.store.KeyStoreException;
+import com.tallate.sidp.keystore.KeyStoreException;
 
 /**
  * @author tallate
