@@ -13,7 +13,7 @@ import java.util.Set;
 public interface KeyStore {
 
   /**
-   * 超时时间，超过则清除
+   * 超时时间，超过则清除 / s
    */
   long EXPIRE_TIME = 300;
 

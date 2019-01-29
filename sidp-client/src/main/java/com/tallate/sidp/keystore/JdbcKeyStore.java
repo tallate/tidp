@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Accessors(chain = true)
 @SuppressWarnings("all")
-public class SQLKeyStore implements KeyStore {
+public class JdbcKeyStore implements KeyStore {
 
   private DataSource dataSource;
 

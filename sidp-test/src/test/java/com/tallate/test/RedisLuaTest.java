@@ -124,4 +124,17 @@ public class RedisLuaTest {
     System.out.println(res);
   }
 
+  /**
+   * 设置一个键的过期时间
+   */
+  @Test
+  public void testPutExpire() {
+    Jedis jedis = getJedis();
+    String luaStr = "redis.call('set', 'a', 'a')\n"
+        + "redis.call('expire', 'a', 10)";
+    String sha = jedis.scriptLoad(luaStr);
+    Object res = jedis.evalsha(sha);
+    System.out.println(res);
+  }
+
 }

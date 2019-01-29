@@ -12,7 +12,7 @@
     <!--<bean id="keyProvider" class="com.tallate.sidp.keyprovider.DefaultKeyProvider"/>-->
     <bean id="keyProvider" class="com.tallate.test.keyprovider.SpanIdKeyProvider"/>
 
-    <!--<bean id="keyStore" class="com.tallate.sidp.keystore.SQLKeyStore">
+    <!--<bean id="keyStore" class="com.tallate.sidp.keystore.JdbcKeyStoree">
         <property name="dataSource" ref="idpDataSource"/>
     </bean>-->
     <bean id="keyStore" class="com.tallate.sidp.keystore.RedisKeyStore">

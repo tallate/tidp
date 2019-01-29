@@ -3,6 +3,7 @@
 local KEY_PREFIX = 'idp-'
 local newKJson = ARGV[1]
 local statesJson = ARGV[2]
+local expire_seconds = ARGV[3]
 local newK = cjson.decode(newKJson)
 local states = cjson.decode(statesJson)
 
@@ -11,6 +12,7 @@ local res = {}
 local oldKJson = redis.call("get", KEY_PREFIX .. newK.id)
 if (false == oldKJson) then -- 不存在时返回值就是false then
     redis.call("set", KEY_PREFIX .. newK.id, newKJson)
+    redis.call("expire", KEY_PREFIX .. newK.id, expire_seconds)
     res['idpKey'] = newK
     res['count'] = 1
     return cjson.encode(res)
@@ -26,6 +28,7 @@ local oldK = cjson.decode(oldKJson)
 if (existsState) then
     -- 存在且状态包含在states中 then
     redis.call("set", KEY_PREFIX .. newK.id, newKJson)
+    redis.call("expire", KEY_PREFIX .. newK.id, expire_seconds)
     res['idpKey'] = oldK
     res['count'] = 1
 else

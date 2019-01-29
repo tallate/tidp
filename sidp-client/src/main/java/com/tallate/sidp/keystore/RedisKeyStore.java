@@ -45,26 +45,6 @@ public class RedisKeyStore implements KeyStore {
     PUTIFABSENTORINSTATES_SCRIPT_SHA = redisClient.loadScript(putifabsentorinstatesScriptContent);
   }
 
-  private String serialize(IdpKey k) throws KeyStoreException {
-    try {
-      return JsonUtil.write(k);
-    } catch (JsonProcessingException e) {
-      // won't reach here
-      throw new KeyStoreException(ExceptionMsgs.IDPKEY_KEYSTORE_SERIALIZING_EXCEPTION, k, e);
-    }
-  }
-
-  @Override
-  public void replace(IdpKey k) throws KeyStoreException {
-    String json = serialize(k);
-    redisClient.setex(KEY_PREFIX + k.getId(), (int) EXPIRE_TIME, json);
-  }
-
-  @Override
-  public void remove(String id) throws KeyStoreException {
-    redisClient.del(id);
-  }
-
   private String serJson(Object obj) throws KeyStoreException {
     try {
       return JsonUtil.write(obj);
@@ -82,11 +62,23 @@ public class RedisKeyStore implements KeyStore {
   }
 
   @Override
+  public void replace(IdpKey k) throws KeyStoreException {
+    String json = serJson(k);
+    redisClient.setex(KEY_PREFIX + k.getId(), (int) EXPIRE_TIME, json);
+  }
+
+  @Override
+  public void remove(String id) throws KeyStoreException {
+    redisClient.del(id);
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public Pair putIfAbsent(IdpKey k) throws KeyStoreException {
     List<String> params = Lists.newLinkedList();
     String json = serJson(k);
     params.add(json);
+    params.add(Long.toString(EXPIRE_TIME));
     Object res = redisClient.executeLua(PUTIFABSENT_SCRIPT_SHA, Lists.newArrayList(), params);
     if (!(res instanceof String)) {
       return null;
@@ -103,6 +95,7 @@ public class RedisKeyStore implements KeyStore {
     String statesJson = serJson(states);
     params.add(kJson);
     params.add(statesJson);
+    params.add(Long.toString(EXPIRE_TIME));
     Object res = redisClient.executeLua(PUTIFABSENTORINSTATES_SCRIPT_SHA, Lists.newArrayList(), params);
     if (!(res instanceof String)) {
       return null;
