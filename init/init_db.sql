@@ -1,5 +1,5 @@
-create database if not exists sidp;
-use sidp;
+create database if not exists tidp;
+use tidp;
 drop table if exists idpkey;
 create table if not exists idpkey (
   `id` varchar(36) not null,
