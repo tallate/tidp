@@ -2,9 +2,9 @@ package com.tallate.tidp.keystore;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.tallate.tidp.Msgs;
 import com.tallate.tidp.IdpKey;
 import com.tallate.tidp.KeyState;
+import com.tallate.tidp.Msgs;
 import com.tallate.tidp.util.NamedThreadFactory;
 import com.tallate.tidp.util.Pair;
 import lombok.Data;
@@ -36,36 +36,51 @@ public class JdbcKeyStore implements KeyStore {
 
   private DataSource dataSource;
 
+  /**
+   * 插入SQL
+   */
   private static final String INSERT_SQL = "insert into idpkey (id, key_state) values(?, ?);";
+  /**
+   * 保存SQL，如果id已存在则更新
+   */
   private static final String SAVE_SQL = "insert into idpkey (id, key_state) values(?, ?) on duplicate key update key_state = ?;";
+  /**
+   * 查询SQL，加行锁
+   */
   private static final String QUERY_LOCKSQL = "select id, key_state from idpkey where id = ? for update;";
-  // in子句需要拼接sql
+  /**
+   * 条件查询SQL，in子句需要拼接sql
+   */
   private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state from idpkey where id = ? or key_state in (";
   private static final String QUERY_INSTATES_LOCKSQL_SUFFIX = ") for update";
+  /**
+   * 删除SQL
+   */
   private static final String DELETE_SQL = "delete from idpkey where id = ?;";
+  /**
+   * 过期清理SQL
+   */
   private static final String CLEANUP_SQL = "delete from idpkey where created_time < date_add(now(), interval -5 minute);";
 
+  /**
+   * 过期清理任务线程池
+   */
   private static final ScheduledExecutorService CLEANUP_POOL = Executors
       .newScheduledThreadPool(1, new NamedThreadFactory("idp-cleanup"));
-
-  private class CleanupTask implements Runnable {
-
-    @Override
-    public void run() {
-      try {
-        Connection conn = dataSource.getConnection();
-        PreparedStatement pstmt = conn.prepareStatement(CLEANUP_SQL);
-        pstmt.executeUpdate();
-      } catch (SQLException cause) {
-        log.error(Msgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
-      }
-    }
-  }
 
   @PostConstruct
   public void init() {
     // 每隔5分钟清理一次过期tidp
-    CLEANUP_POOL.scheduleAtFixedRate(new CleanupTask(), EXPIRE_TIME, EXPIRE_TIME, TimeUnit.SECONDS);
+    CLEANUP_POOL.scheduleAtFixedRate(() -> {
+          try {
+            Connection conn = dataSource.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(CLEANUP_SQL);
+            pstmt.executeUpdate();
+          } catch (SQLException cause) {
+            log.error(Msgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
+          }
+        },
+        EXPIRE_TIME, EXPIRE_TIME, TimeUnit.SECONDS);
   }
 
   @Override

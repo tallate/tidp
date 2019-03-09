@@ -2,9 +2,9 @@ package com.tallate.tidp.keystore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;
-import com.tallate.tidp.Msgs;
 import com.tallate.tidp.IdpKey;
 import com.tallate.tidp.KeyState;
+import com.tallate.tidp.Msgs;
 import com.tallate.tidp.util.FileUtil;
 import com.tallate.tidp.util.JsonUtil;
 import com.tallate.tidp.util.Pair;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -37,12 +38,9 @@ public class RedisKeyStore implements KeyStore {
 
   private static volatile String PUTIFABSENTORINSTATES_SCRIPT_SHA;
 
-  @PostConstruct
-  public void init() {
-    String putifabsentScriptContent = FileUtil.readExternalResFile(PUTIFABSENT_SCRIPT_PATH);
-    PUTIFABSENT_SCRIPT_SHA = redisClient.loadScript(putifabsentScriptContent);
-    String putifabsentorinstatesScriptContent = FileUtil.readExternalResFile(PUTIFABSENTORINSTATES_SCRIPT_PATH);
-    PUTIFABSENTORINSTATES_SCRIPT_SHA = redisClient.loadScript(putifabsentorinstatesScriptContent);
+  private String loadScript(String fileName) {
+    String content = FileUtil.readExternalResFile(fileName);
+    return redisClient.loadScript(content);
   }
 
   private String serJson(Object obj) throws KeyStoreException {
@@ -61,6 +59,27 @@ public class RedisKeyStore implements KeyStore {
     }
   }
 
+  /**
+   * 使用Redis执行Lua脚本
+   */
+  private Pair executeScript(String sha, String... params) throws KeyStoreException {
+    List<String> paramList = Lists.newArrayList();
+    if (params != null) {
+      paramList.addAll(Arrays.asList(params));
+    }
+    Object res = redisClient.executeLua(sha, Lists.newArrayList(), paramList);
+    if (!(res instanceof String)) {
+      return null;
+    }
+    return deserJson((String) res, Pair.class);
+  }
+
+  @PostConstruct
+  public void init() {
+    PUTIFABSENT_SCRIPT_SHA = loadScript(PUTIFABSENT_SCRIPT_PATH);
+    PUTIFABSENTORINSTATES_SCRIPT_SHA = loadScript(PUTIFABSENTORINSTATES_SCRIPT_PATH);
+  }
+
   @Override
   public void replace(IdpKey k) throws KeyStoreException {
     String json = serJson(k);
@@ -73,33 +92,18 @@ public class RedisKeyStore implements KeyStore {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Pair putIfAbsent(IdpKey k) throws KeyStoreException {
-    List<String> params = Lists.newLinkedList();
-    String json = serJson(k);
-    params.add(json);
-    params.add(Long.toString(EXPIRE_TIME));
-    Object res = redisClient.executeLua(PUTIFABSENT_SCRIPT_SHA, Lists.newArrayList(), params);
-    if (!(res instanceof String)) {
-      return null;
-    }
-    return deserJson((String) res, Pair.class);
+    String kJson = serJson(k);
+    String expireTime = Long.toString(EXPIRE_TIME);
+    return executeScript(PUTIFABSENT_SCRIPT_SHA, kJson, expireTime);
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public Pair putIfAbsentOrInStates(IdpKey k, Set<KeyState> states)
       throws KeyStoreException {
-    List<String> params = Lists.newLinkedList();
     String kJson = serJson(k);
     String statesJson = serJson(states);
-    params.add(kJson);
-    params.add(statesJson);
-    params.add(Long.toString(EXPIRE_TIME));
-    Object res = redisClient.executeLua(PUTIFABSENTORINSTATES_SCRIPT_SHA, Lists.newArrayList(), params);
-    if (!(res instanceof String)) {
-      return null;
-    }
-    return deserJson((String) res, Pair.class);
+    String expireTime = Long.toString(EXPIRE_TIME);
+    return executeScript(PUTIFABSENTORINSTATES_SCRIPT_SHA, kJson, statesJson, expireTime);
   }
 }

@@ -18,6 +18,7 @@ if (false == oldKJson) then -- 不存在时返回值就是false then
     return cjson.encode(res)
 end
 
+-- 已经存在的情况
 local existsState = false
 for i, state in ipairs(states) do
     if (newK.state == state) then
