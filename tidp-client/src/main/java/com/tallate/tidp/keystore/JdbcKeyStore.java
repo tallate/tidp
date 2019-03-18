@@ -32,35 +32,9 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Accessors(chain = true)
 @SuppressWarnings("all")
-public class JdbcKeyStore implements KeyStore {
+public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
 
   private DataSource dataSource;
-
-  /**
-   * 插入SQL
-   */
-  private static final String INSERT_SQL = "insert into idpkey (id, key_state) values(?, ?);";
-  /**
-   * 保存SQL，如果id已存在则更新
-   */
-  private static final String SAVE_SQL = "insert into idpkey (id, key_state) values(?, ?) on duplicate key update key_state = ?;";
-  /**
-   * 查询SQL，加行锁
-   */
-  private static final String QUERY_LOCKSQL = "select id, key_state from idpkey where id = ? for update;";
-  /**
-   * 条件查询SQL，in子句需要拼接sql
-   */
-  private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state from idpkey where id = ? or key_state in (";
-  private static final String QUERY_INSTATES_LOCKSQL_SUFFIX = ") for update";
-  /**
-   * 删除SQL
-   */
-  private static final String DELETE_SQL = "delete from idpkey where id = ?;";
-  /**
-   * 过期清理SQL
-   */
-  private static final String CLEANUP_SQL = "delete from idpkey where created_time < date_add(now(), interval -5 minute);";
 
   /**
    * 过期清理任务线程池
@@ -131,36 +105,6 @@ public class JdbcKeyStore implements KeyStore {
       log.error(Msgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
       throw new KeyStoreException(Msgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
     }
-  }
-
-  Map<Integer, String> SQL_CACHE = new HashMap<>();
-
-  private Integer hashing(Set<KeyState> states) {
-    int hash = 0;
-    for (KeyState state : states) {
-      hash += state.getValue();
-    }
-    return hash;
-  }
-
-  private String genQueryInStatesSql(Set<KeyState> states) {
-    String sql;
-    int hash = hashing(states);
-    if (null != (sql = SQL_CACHE.get(hash))) {
-      return sql;
-    }
-    StringBuilder sqlSB = new StringBuilder(QUERY_INSTATES_LOCKSQL_PREFIX);
-    KeyState[] ss = states.toArray(new KeyState[0]);
-    for (int i = 0; i < ss.length; i++) {
-      sqlSB.append("?");
-      if (i != ss.length - 1) {
-        sqlSB.append(", ");
-      }
-    }
-    sqlSB.append(QUERY_INSTATES_LOCKSQL_SUFFIX);
-    sql = sqlSB.toString();
-    SQL_CACHE.put(hash, sql);
-    return sql;
   }
 
   @Override
