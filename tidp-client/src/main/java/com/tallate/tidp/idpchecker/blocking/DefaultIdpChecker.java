@@ -8,12 +8,11 @@ import com.tallate.tidp.KeyState;
  * @author tallate
  * @date 1/19/19
  */
-
 public class DefaultIdpChecker extends BlockingIdpChecker {
 
-  public DefaultIdpChecker() {
-    rejectStateSet.add(KeyState.SUCCESS);
-    rejectStateSet.add(KeyState.RUNTIME_FAIL);
-    passStateSet.add(KeyState.FAIL);
-  }
+    public DefaultIdpChecker() {
+        rejectStateSet.add(KeyState.SUCCESS);
+        rejectStateSet.add(KeyState.RUNTIME_FAIL);
+        passStateSet.add(KeyState.FAIL);
+    }
 }

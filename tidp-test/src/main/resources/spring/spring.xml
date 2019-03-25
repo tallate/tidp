@@ -28,12 +28,8 @@
         <property name="keyStore" ref="keyStore"/>
     </bean>
 
-    <bean id="idpInterceptor" class="com.tallate.tidp.spring.IdpInterceptor">
+    <bean id="idpAspect" class="com.tallate.tidp.spring.IdpInterceptor">
         <property name="idpChecker" ref="idpChecker"/>
-    </bean>
-
-    <bean id="idpAspect" class="com.tallate.tidp.spring.IdpAspect">
-        <property name="idpInterceptor" ref="idpInterceptor"/>
     </bean>
 
     <aop:config>
@@ -44,7 +40,7 @@
     </aop:config>
 
     <!-- 这个Aspect获取Http请求信息，注意order值比上边那个小、优先执行 -->
-    <bean id="httpAspect" class="com.tallate.test.http.HttpAspect"/>
+    <bean id="httpAspect" class="com.tallate.test.http.HttpInterceptor"/>
     <aop:config>
         <aop:aspect id="http" ref="httpAspect" order="1">
             <aop:pointcut id="getSpanId" expression="@annotation(com.tallate.tidp.EnableIdp)"/>

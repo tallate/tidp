@@ -1,22 +1,37 @@
 package com.tallate.tidp.spring;
 
-import com.tallate.tidp.Msgs;
+import com.tallate.tidp.IdpException;
 import com.tallate.tidp.MethodSignatureWrapper;
+import com.tallate.tidp.Msgs;
 import com.tallate.tidp.idpchecker.IdpChecker;
 import com.tallate.tidp.idpchecker.RejectException;
 import com.tallate.tidp.keyprovider.KeyGenException;
-import com.tallate.tidp.IdpException;
 import com.tallate.tidp.keystore.KeyStoreException;
 import lombok.Data;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
 
+/**
+ * 用于定义幂等切面
+ *
+ * @author tallate
+ * @date 1/19/19
+ */
+@Slf4j
+@Accessors(chain = true)
 @Data
 public class IdpInterceptor {
 
     private IdpChecker idpChecker;
 
-    public Object doIntercept(MethodSignatureWrapper wrapper) throws Throwable {
+    public Object intercept(ProceedingJoinPoint pjp) throws Throwable {
+        MethodSignatureWrapper wrapper = new MethodSignatureWrapper(pjp);
+        String methodFullName = wrapper.getMethodSignature();
+        log.info(">> idempotent intercept method {}", methodFullName);
+        Object res;
         try {
-            return idpChecker.onCheck(wrapper);
+            res = idpChecker.onCheck(wrapper);
         } catch (KeyStoreException cause) {
             throw new IdpException(Msgs.IDPKEY_STORE_EXCEPTION, cause);
         } catch (KeyGenException cause) {
@@ -29,6 +44,8 @@ public class IdpInterceptor {
             idpChecker.onException(cause);
             throw cause;
         }
+        log.info("<< idempotent intercept method {}", methodFullName);
+        return res;
     }
 
 }

@@ -12,10 +12,10 @@ import com.tallate.tidp.KeyState;
  */
 public class NoRejectIdpChecker extends BlockingIdpChecker {
 
-  public NoRejectIdpChecker() {
-    rejectStateSet.add(KeyState.SUCCESS);
-    passStateSet.add(KeyState.FAIL);
-    passStateSet.add(KeyState.RUNTIME_FAIL);
-  }
+    public NoRejectIdpChecker() {
+        rejectStateSet.add(KeyState.SUCCESS);
+        passStateSet.add(KeyState.FAIL);
+        passStateSet.add(KeyState.RUNTIME_FAIL);
+    }
 
 }

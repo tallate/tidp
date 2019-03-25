@@ -9,7 +9,6 @@ import com.tallate.tidp.idpchecker.RejectException;
 import com.tallate.tidp.util.KeyGenUtil;
 import com.tallate.tidp.util.Pair;
 import com.tallate.tidp.util.StringJoinerUtil;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,29 +20,29 @@ import java.util.Set;
  */
 public abstract class NonblockingIdpChecker extends BaseIdpChecker {
 
-  Set<KeyState> rejectStateSet;
+    Set<KeyState> rejectStateSet;
 
-  public NonblockingIdpChecker() {
-    rejectStateSet = new HashSet<>();
-    rejectStateSet.add(KeyState.SUCCESS);
-  }
-
-  @Override
-  public Object onCheck(MethodSignatureWrapper target) throws Throwable {
-    String id = keyProvider.get();
-    IdpKey newK = KeyGenUtil.newExecuting(id);
-    Pair pair = keyStore.putIfAbsent(newK);
-    IdpKey oldK = pair.getIdpKey();
-    if (rejectStateSet.contains(oldK.getKeyState())) {
-      throw new RejectException(StringJoinerUtil
-          .join(Msgs.IDP_REJECT_EXCEPTION, ":", oldK.toString()));
+    public NonblockingIdpChecker() {
+        rejectStateSet = new HashSet<>();
+        rejectStateSet.add(KeyState.SUCCESS);
     }
-    // 调用目标方法
-    Object res = target.invoke();
-    // 若调用成功没有抛出异常，将调用结果保存到 KeyStore
-    IdpKey idpKey = KeyGenUtil.newSuccess(keyProvider.get(), res);
-    keyStore.replace(idpKey);
-    return res;
-  }
+
+    @Override
+    public Object onCheck(MethodSignatureWrapper target) throws Throwable {
+        String id = keyProvider.get();
+        IdpKey newK = KeyGenUtil.newExecuting(id);
+        Pair pair = keyStore.putIfAbsent(newK);
+        IdpKey oldK = pair.getIdpKey();
+        if (rejectStateSet.contains(oldK.getKeyState())) {
+            throw new RejectException(StringJoinerUtil
+                    .join(Msgs.IDP_REJECT_EXCEPTION, ":", oldK.toString()));
+        }
+        // 调用目标方法
+        Object res = target.invoke();
+        // 若调用成功没有抛出异常，将调用结果保存到 KeyStore
+        IdpKey idpKey = KeyGenUtil.newSuccess(keyProvider.get(), res);
+        keyStore.replace(idpKey);
+        return res;
+    }
 
 }
