@@ -22,8 +22,8 @@ import org.springframework.test.context.junit4.SpringRunner;
  * 测试调用redisClient接口执行Lua脚本
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = TestIdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-public class RedisLuaTest {
+@SpringBootTest(classes = TestRedisIdpApplication.class, webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+public class RedisTest {
 
     @Autowired
     private RedisClient redisClient;

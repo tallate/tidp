@@ -22,6 +22,8 @@ public class Msgs {
 
   public static final String IDPKEY_COMPRESS_EXCEPTION = "[幂等性组件错误]：IdpKey压缩出错";
 
+  public static final String IDP_EXCEPTION = "[幂等性拦截]";
+
   public static final String IDP_REJECT_EXCEPTION = "[幂等性拦截]：IdpKey被重复调用，且未成功结束";
 
   public static final String IDP_MULTI_INVOKE = "[幂等性拦截]：IdpKey被重复调用，直接返回旧值";

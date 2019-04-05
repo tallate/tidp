@@ -5,26 +5,25 @@ import com.google.common.base.Strings;
 import com.tallate.tidp.IdpKey;
 import com.tallate.tidp.KeyState;
 import com.tallate.tidp.Msgs;
+import com.tallate.tidp.spring.DebugConfig;
+import com.tallate.tidp.spring.DebugConfig.Mode;
 import com.tallate.tidp.util.NamedThreadFactory;
 import com.tallate.tidp.util.Pair;
-import lombok.Data;
-import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.annotation.PostConstruct;
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
+import lombok.Data;
+import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
+ *
  */
 @Slf4j
 @Data
@@ -40,16 +39,22 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
   private static final ScheduledExecutorService CLEANUP_POOL = Executors
       .newScheduledThreadPool(1, new NamedThreadFactory("idp-cleanup"));
 
-  @PostConstruct
-  public void init() {
+  public JdbcKeyStore() {
     // 每隔5分钟清理一次过期tidp
     CLEANUP_POOL.scheduleAtFixedRate(() -> {
-          try {
-            Connection conn = dataSource.getConnection();
+          if (DebugConfig.getMode() == Mode.DEBUG) {
+            log.info(">> IdpKey清理开始");
+          }
+          try (Connection conn = dataSource.getConnection()) {
             PreparedStatement pstmt = conn.prepareStatement(CLEANUP_SQL);
             pstmt.executeUpdate();
           } catch (SQLException cause) {
-            log.error(Msgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
+            if (DebugConfig.getMode() == Mode.DEBUG) {
+              log.error(Msgs.IDPKEY_KEYSTORE_CLEANUP_EXCEPTION, cause);
+            }
+          }
+          if (DebugConfig.getMode() == Mode.DEBUG) {
+            log.info("<< IdpKey清理结束");
           }
         },
         EXPIRE_TIME, EXPIRE_TIME, TimeUnit.SECONDS);
@@ -57,12 +62,16 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
 
   @Override
   public void replace(IdpKey k) throws KeyStoreException {
-    try {
-      Connection conn = dataSource.getConnection();
+    try (Connection conn = dataSource.getConnection()) {
       PreparedStatement pstmt = conn.prepareStatement(SAVE_SQL);
       pstmt.setString(1, k.getId());
       pstmt.setString(2, k.getKeyState().toString());
-      pstmt.setString(3, k.getKeyState().toString());
+      pstmt.setBytes(3, k.getContent());
+      pstmt.setString(4, k.getKeyState().toString());
+      pstmt.setBytes(5, k.getContent());
+      if(DebugConfig.getMode() == Mode.DEBUG) {
+        log.info("save_sql: " + pstmt.toString());
+      }
       pstmt.executeUpdate();
     } catch (SQLException cause) {
       throw new KeyStoreException(Msgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
@@ -75,8 +84,7 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
   @Override
   public Pair putIfAbsent(IdpKey k) throws KeyStoreException {
     Preconditions.checkNotNull(k);
-    try {
-      Connection conn = dataSource.getConnection();
+    try (Connection conn = dataSource.getConnection()) {
       conn.setAutoCommit(false);
       PreparedStatement queryPStmt = conn.prepareStatement(QUERY_LOCKSQL);
       queryPStmt.setString(1, k.getId());
@@ -87,20 +95,22 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
         // 如果存在，则将旧值返回
         oldK = new IdpKey()
             .setId(rs.getString(1))
-            .setKeyState(Enum.valueOf(KeyState.class, rs.getString(2)));
+            .setKeyState(Enum.valueOf(KeyState.class, rs.getString(2)))
+            .setContent(rs.getBytes(3));
       } else {
         // 如果不存在，则插入新值
         PreparedStatement savePStmt = conn.prepareStatement(SAVE_SQL);
         savePStmt.setString(1, k.getId());
         savePStmt.setString(2, k.getKeyState().toString());
-        savePStmt.setString(3, k.getKeyState().toString());
+        savePStmt.setBytes(3, k.getContent());
+        savePStmt.setString(4, k.getKeyState().toString());
+        savePStmt.setBytes(5, k.getContent());
         updatedCount = savePStmt.executeUpdate();
         oldK = k;
       }
       conn.commit();
       return new Pair(oldK, updatedCount);
     } catch (SQLException cause) {
-      log.error(Msgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
       throw new KeyStoreException(Msgs.IDPKEY_KEYSTORE_SAVE_EXCEPTION, k, cause);
     }
   }
@@ -109,8 +119,7 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
   public Pair putIfAbsentOrInStates(IdpKey k, Set<KeyState> states)
       throws KeyStoreException {
     Preconditions.checkNotNull(k);
-    try {
-      Connection conn = dataSource.getConnection();
+    try (Connection conn = dataSource.getConnection()) {
       conn.setAutoCommit(false);
       String sql = genQueryInStatesSql(states);
       PreparedStatement queryPStmt = conn.prepareStatement(sql);
@@ -119,6 +128,9 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
       for (int i = 0; i < ss.length; i++) {
         queryPStmt.setString(2 + i, ss[i].toString());
       }
+      if(DebugConfig.getMode() == Mode.DEBUG) {
+        log.info("query_in_states_sql: " + queryPStmt.toString());
+      }
       ResultSet rs = queryPStmt.executeQuery();
       IdpKey oldK;
       Integer updatedCount = 0;
@@ -126,13 +138,19 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
         // 如果存在，则将旧值返回
         oldK = new IdpKey()
             .setId(rs.getString(1))
-            .setKeyState(Enum.valueOf(KeyState.class, rs.getString(2)));
+            .setKeyState(Enum.valueOf(KeyState.class, rs.getString(2)))
+            .setContent(rs.getBytes(3));
       } else {
         // 如果不存在，则插入新值，并将新值返回
         PreparedStatement savePStmt = conn.prepareStatement(SAVE_SQL);
         savePStmt.setString(1, k.getId());
         savePStmt.setString(2, k.getKeyState().toString());
-        savePStmt.setString(3, k.getKeyState().toString());
+        savePStmt.setBytes(3, k.getContent());
+        savePStmt.setString(4, k.getKeyState().toString());
+        savePStmt.setBytes(5, k.getContent());
+        if(DebugConfig.getMode() == Mode.DEBUG) {
+          log.info("save_sql: " + savePStmt.toString());
+        }
         updatedCount = savePStmt.executeUpdate();
         oldK = k;
       }
@@ -146,13 +164,11 @@ public class JdbcKeyStore extends DbBasedKeyStore implements KeyStore {
   @Override
   public void remove(String id) throws KeyStoreException {
     Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-    try {
-      Connection conn = dataSource.getConnection();
+    try (Connection conn = dataSource.getConnection()) {
       PreparedStatement pstmt = conn.prepareStatement(DELETE_SQL);
       pstmt.setString(1, id);
       pstmt.executeUpdate();
     } catch (SQLException cause) {
-      log.error(Msgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
       throw new KeyStoreException(Msgs.IDPKEY_KEYSTORE_DELETE_EXCEPTION, id, cause);
     }
   }

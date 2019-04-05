@@ -1,4 +1,4 @@
-package com.tallate.test.config;
+package com.tallate.test.redisconfig;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;

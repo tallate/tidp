@@ -13,22 +13,22 @@ public abstract class DbBasedKeyStore {
   /**
    * 插入SQL
    */
-  public static final String INSERT_SQL = "insert into idpkey (id, key_state) values(?, ?);";
+  public static final String INSERT_SQL = "insert into idpkey (id, key_state, content) values(?, ?, ?);";
   /**
    * 保存SQL，如果id已存在则更新
    */
-  static final String SAVE_SQL = "insert into idpkey (id, key_state) values(?, ?) on duplicate key update key_state = ?;";
+  static final String SAVE_SQL = "insert into idpkey (id, key_state, content) values(?, ?, ?) on duplicate key update key_state = ?, content = ?;";
 
-  static final String QUERY_SQL = "select id, key_state from idpkey where id = ?;";
+  static final String QUERY_SQL = "select id, key_state, content from idpkey where id = ?;";
 
   /**
    * 查询SQL，加行锁
    */
-  static final String QUERY_LOCKSQL = "select id, key_state from idpkey where id = ? for update;";
+  static final String QUERY_LOCKSQL = "select id, key_state, content from idpkey where id = ? for update;";
   /**
    * 条件查询SQL，in子句需要拼接sql
    */
-  private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state from idpkey where id = ? or key_state in (";
+  private static final String QUERY_INSTATES_LOCKSQL_PREFIX = "select id, key_state, content from idpkey where id = ? or key_state in (";
   private static final String QUERY_INSTATES_LOCKSQL_SUFFIX = ") for update";
   /**
    * 删除SQL

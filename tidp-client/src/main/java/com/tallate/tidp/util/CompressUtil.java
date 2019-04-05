@@ -1,8 +1,6 @@
 package com.tallate.tidp.util;
 
 import com.google.common.base.Strings;
-import com.sun.xml.internal.ws.util.UtilException;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,9 +10,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
- * 数据压缩
- * 1. gzip和zip，gzip相对来说压缩比率更高
- *
+ * 数据压缩 1. gzip和zip，gzip相对来说压缩比率更高
  */
 public class CompressUtil {
 
@@ -26,11 +22,12 @@ public class CompressUtil {
   }
 
   public static byte[] compressByGZIP(String str, String encoding) throws IOException {
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-         GZIPOutputStream gzip = new GZIPOutputStream(out)) {
-      gzip.write(str.getBytes(encoding));
-      return out.toByteArray();
-    }
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    GZIPOutputStream gzip = new GZIPOutputStream(out);
+    gzip.write(str.getBytes(encoding));
+    // 必须先关闭再获取压缩后内容
+    gzip.close();
+    return out.toByteArray();
   }
 
   /**
@@ -43,12 +40,18 @@ public class CompressUtil {
     return extByGZIP(bytes, "UTF-8");
   }
 
-  private static String extByGZIP(byte[] bytes, String encoding) throws UtilException, IOException {
+  private static String extByGZIP(byte[] bytes, String encoding) throws IOException {
     String ret;
-    try (GZIPInputStream gi = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
-      ret = FileUtil.readStream(gi, encoding);
+    try (ByteArrayInputStream bi = new ByteArrayInputStream(bytes);
+        GZIPInputStream gi = new GZIPInputStream(bi);
+        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      byte[] buffer = new byte[1024];
+      int n;
+      while ((n = gi.read(buffer)) >= 0) {
+        out.write(buffer, 0, n);
+      }
+      return out.toString(encoding);
     }
-    return ret;
   }
 
   /**
@@ -76,13 +79,13 @@ public class CompressUtil {
    */
   private static byte[] compressByZip(String str, String encoding) throws IOException {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-         ZipOutputStream gzip = new ZipOutputStream(out)) {
+        ZipOutputStream gzip = new ZipOutputStream(out)) {
       gzip.write(str.getBytes(encoding));
       return out.toByteArray();
     }
   }
 
-  private static String extByZip(byte[] bytes, String encoding) throws UtilException, IOException {
+  private static String extByZip(byte[] bytes, String encoding) throws IOException {
     String ret;
     try (ZipInputStream gi = new ZipInputStream(new ByteArrayInputStream(bytes))) {
       ret = FileUtil.readStream(gi, encoding);

@@ -1,4 +1,4 @@
-package com.tallate.test;
+package com.tallate.test.controller;
 
 import com.tallate.tidp.EnableIdp;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,4 +1,4 @@
-package com.tallate.test.keystore;
+package com.tallate.test.redisconfig;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.Lists;

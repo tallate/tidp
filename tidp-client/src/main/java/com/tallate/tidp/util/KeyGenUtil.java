@@ -1,25 +1,32 @@
 package com.tallate.tidp.util;
 
+import static com.tallate.tidp.Msgs.IDPKEY_COMPRESS_EXCEPTION;
+
 import com.tallate.tidp.IdpKey;
 import com.tallate.tidp.KeyState;
 import com.tallate.tidp.keyprovider.KeyGenException;
-
 import java.io.IOException;
-
-import static com.tallate.tidp.Msgs.IDPKEY_COMPRESS_EXCEPTION;
+import java.util.Base64;
 
 /**
+ *
  */
 public class KeyGenUtil {
 
   public static byte[] serialize(Object res) throws IOException {
     String serialized = JsonUtil.write(res);
-    return CompressUtil.zip(serialized);
+    byte[] compressed = CompressUtil.gzip(serialized);
+    return Base64.getEncoder().encode(compressed);
   }
 
   public static <T> T deserialize(byte[] bytes, Class<T> type) throws IOException {
-    String uncompressed = CompressUtil.unZip(bytes);
-    return JsonUtil.read(uncompressed, type);
+    byte[] decoded = Base64.getDecoder().decode(bytes);
+    String uncompressed = CompressUtil.unGZIP(decoded);
+    try {
+      return JsonUtil.read(uncompressed, type);
+    } catch (IOException e) {
+      throw new IOException("反序列化失败：" + new String(bytes) + " -> " + type.getName(), e);
+    }
   }
 
   public static IdpKey newSuccess(String id, Object res) throws KeyGenException {

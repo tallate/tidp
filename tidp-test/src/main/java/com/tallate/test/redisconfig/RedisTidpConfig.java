@@ -1,4 +1,4 @@
-package com.tallate.test.config;
+package com.tallate.test.redisconfig;
 
 import com.tallate.test.http.HttpInterceptor;
 import com.tallate.test.keyprovider.SpanIdKeyProvider;
@@ -15,8 +15,11 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * 在相应启动类中引入
+ */
 @Configuration
-public class TidpConfig {
+public class RedisTidpConfig {
 
     @Bean
     public KeyProvider getKeyProvider() {
@@ -48,24 +51,6 @@ public class TidpConfig {
     @Bean
     public HttpInterceptor getIdpInter() {
         return new HttpInterceptor();
-    }
-
-    /**
-     * 幂等切点
-     */
-    @Pointcut("@annotation(com.tallate.tidp.EnableIdp)")
-    public void interceptIdpInter() {
-
-    }
-
-    /**
-     * 织入通知，注意织入顺序
-     */
-    @Around("interceptIdpInter()")
-    public void intercept(HttpInterceptor httpInter, IdpInterceptor idpInter,
-            ProceedingJoinPoint pjp) throws Throwable {
-        httpInter.intercept(pjp);
-        idpInter.intercept(pjp);
     }
 
 }
