@@ -25,8 +25,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author tallate
- * @date 1/18/19
  */
 @Slf4j
 @Data

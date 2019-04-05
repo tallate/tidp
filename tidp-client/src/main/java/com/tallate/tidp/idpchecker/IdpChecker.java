@@ -5,8 +5,6 @@ import com.tallate.tidp.keyprovider.KeyGenException;
 import com.tallate.tidp.keystore.KeyStoreException;
 
 /**
- * @author tallate
- * @date 1/18/19
  */
 public interface IdpChecker {
 

@@ -15,8 +15,6 @@ import java.util.zip.ZipOutputStream;
  * 数据压缩
  * 1. gzip和zip，gzip相对来说压缩比率更高
  *
- * @author hgc
- * @date 1/30/19
  */
 public class CompressUtil {
 

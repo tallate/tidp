@@ -9,8 +9,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 /**
- * @author tallate
- * @date 1/21/19
  */
 @Slf4j
 @Data

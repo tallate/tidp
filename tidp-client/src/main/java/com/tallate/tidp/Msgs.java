@@ -1,8 +1,6 @@
 package com.tallate.tidp;
 
 /**
- * @author tallate
- * @date 1/20/19
  */
 public class Msgs {
 

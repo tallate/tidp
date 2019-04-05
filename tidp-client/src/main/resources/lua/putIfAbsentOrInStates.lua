@@ -11,8 +11,7 @@ local res = {}
 -- 不存在的情况
 local oldKJson = redis.call("get", KEY_PREFIX .. newK.id)
 if (false == oldKJson) then -- 不存在时返回值就是false then
-    redis.call("set", KEY_PREFIX .. newK.id, newKJson)
-    redis.call("expire", KEY_PREFIX .. newK.id, expire_seconds)
+    redis.call("set", KEY_PREFIX .. newK.id, newKJson, "EX", expire_seconds)
     res['idpKey'] = newK
     res['count'] = 1
     return cjson.encode(res)
@@ -28,8 +27,7 @@ end
 local oldK = cjson.decode(oldKJson)
 if (existsState) then
     -- 存在且状态包含在states中 then
-    redis.call("set", KEY_PREFIX .. newK.id, newKJson)
-    redis.call("expire", KEY_PREFIX .. newK.id, expire_seconds)
+    redis.call("set", KEY_PREFIX .. newK.id, newKJson, "EX", expire_seconds)
     res['idpKey'] = oldK
     res['count'] = 1
 else

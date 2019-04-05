@@ -12,8 +12,6 @@ import org.springframework.web.client.RestTemplate;
 /**
  * 需要先启动对应存储中间件和TestIdpApplication
  *
- * @author tallate
- * @date 1/20/19
  */
 public class IdpTest {
 

@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 支持阻塞，当上一个请求还在执行中时，IdpKey的状态为EXECUTING，这个状态可以当作乐观锁
  *
- * @author tallate
- * @date 1/20/19
  */
 @Slf4j
 @SuppressWarnings("unchecked")

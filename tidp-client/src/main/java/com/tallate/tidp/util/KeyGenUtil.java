@@ -9,8 +9,6 @@ import java.io.IOException;
 import static com.tallate.tidp.Msgs.IDPKEY_COMPRESS_EXCEPTION;
 
 /**
- * @author hgc
- * @date 2/17/19
  */
 public class KeyGenUtil {
 

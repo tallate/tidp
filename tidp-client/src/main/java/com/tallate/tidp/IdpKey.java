@@ -10,8 +10,6 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * @author tallate
- * @date 1/19/19
  */
 @Data
 @AllArgsConstructor

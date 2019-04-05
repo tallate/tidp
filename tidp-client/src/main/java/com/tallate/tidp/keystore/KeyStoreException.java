@@ -4,8 +4,6 @@ import com.tallate.tidp.IdpKey;
 import com.tallate.tidp.util.StringJoinerUtil;
 
 /**
- * @author tallate
- * @date 1/19/19
  */
 public class KeyStoreException extends Exception {
 

@@ -3,8 +3,6 @@ package com.tallate.tidp.util;
 import java.util.Arrays;
 
 /**
- * @author tallate
- * @date 1/20/19
  */
 public class StringJoinerUtil {
 

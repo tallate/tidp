@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * @author hgc
- * @date 3/13/19
  */
 public class TxKeyStore extends DbBasedKeyStore implements KeyStore {
 

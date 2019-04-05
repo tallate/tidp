@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author tallate
- */
+  */
 public interface RedisClient {
 
     /**

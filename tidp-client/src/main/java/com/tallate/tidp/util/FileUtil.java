@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 
 /**
- * @author hgc
- * @date 1/26/19
  */
 @Slf4j
 public class FileUtil {

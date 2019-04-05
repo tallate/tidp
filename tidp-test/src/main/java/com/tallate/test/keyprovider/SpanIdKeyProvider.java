@@ -4,8 +4,6 @@ import com.tallate.tidp.keyprovider.KeyGenException;
 import com.tallate.tidp.keyprovider.KeyProvider;
 
 /**
- * @author tallate
- * @date 1/21/19
  */
 public class SpanIdKeyProvider implements KeyProvider {
 

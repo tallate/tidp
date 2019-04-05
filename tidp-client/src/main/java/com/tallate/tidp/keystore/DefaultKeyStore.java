@@ -12,8 +12,6 @@ import java.util.concurrent.ConcurrentMap;
  * 默认在线程隔离变量中保存
  * 只适用于服务器只有单线程且采取BIO的通信模型，因为实际中重试不一定发生在同一个线程内
  *
- * @author tallate
- * @date 1/19/19
  */
 public class DefaultKeyStore implements KeyStore {
 

@@ -6,8 +6,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author tallate
- * @date 1/20/19
  */
 @RestController
 @RequestMapping("/test/idp")

@@ -5,8 +5,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
 /**
- * @author tallate
- * @date 1/19/19
  */
 @AllArgsConstructor
 public class MethodSignatureWrapper {

@@ -19,8 +19,6 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * @author tallate
- * @date 1/18/19
  */
 @Data
 @Slf4j

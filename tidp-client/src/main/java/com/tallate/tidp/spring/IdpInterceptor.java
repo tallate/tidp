@@ -15,8 +15,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 /**
  * 用于定义幂等切面
  *
- * @author tallate
- * @date 1/19/19
  */
 @Slf4j
 @Accessors(chain = true)

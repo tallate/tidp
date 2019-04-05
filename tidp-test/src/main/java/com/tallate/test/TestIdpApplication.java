@@ -5,8 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 
 /**
- * @author tallate
- * @date 1/20/19
  */
 @SpringBootApplication(scanBasePackages = {"com.tallate.test"})
 //@ImportResource("classpath*:spring/*.xml")

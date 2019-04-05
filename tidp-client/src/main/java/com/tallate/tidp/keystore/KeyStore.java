@@ -7,8 +7,6 @@ import com.tallate.tidp.util.Pair;
 import java.util.Set;
 
 /**
- * @author tallate
- * @date 1/18/19
  */
 public interface KeyStore {
 

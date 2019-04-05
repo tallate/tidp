@@ -15,8 +15,6 @@ import java.util.Set;
 /**
  * 非阻塞，即使别的线程正在执行调用（EXECUTING），也直接拦截
  *
- * @author tallate
- * @date 1/20/19
  */
 public abstract class NonblockingIdpChecker extends BaseIdpChecker {
 

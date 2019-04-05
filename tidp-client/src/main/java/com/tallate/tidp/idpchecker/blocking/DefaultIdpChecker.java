@@ -5,8 +5,6 @@ import com.tallate.tidp.KeyState;
 /**
  * EXECUTING阻塞，FAIL放行，其他拒绝
  *
- * @author tallate
- * @date 1/19/19
  */
 public class DefaultIdpChecker extends BlockingIdpChecker {
 

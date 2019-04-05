@@ -6,8 +6,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 
 /**
- * @author tallate
- * @date 1/21/19
  */
 public class HttpUtil {
 

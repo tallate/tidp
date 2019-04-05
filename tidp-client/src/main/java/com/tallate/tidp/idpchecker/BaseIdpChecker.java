@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * @author tallate
- * @date 1/19/19
  */
 @Data
 @Accessors(chain = true)
