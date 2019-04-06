@@ -55,6 +55,17 @@ public interface RedisClient {
     long ttl(final String key);
 
     /**
+     * 开启事务
+     */
+    void multi();
+
+    /**
+     * 执行事务
+     * @return 每条命令的执行结果
+     */
+    List<Object> exec();
+
+    /**
      * 加载和执行lua脚本
      */
     String loadScript(String luaScript);
