@@ -43,13 +43,13 @@ public class RedisTidpConfig {
      * 幂等切面
      */
     @Bean
-    public IdpInterceptor getIdpInter(IdpChecker idpChecker) {
+    public IdpInterceptor idpInterceptor(IdpChecker idpChecker) {
         return new IdpInterceptor()
                 .setIdpChecker(idpChecker);
     }
 
     @Bean
-    public HttpInterceptor getIdpInter() {
+    public HttpInterceptor httpInterceptor() {
         return new HttpInterceptor();
     }
 

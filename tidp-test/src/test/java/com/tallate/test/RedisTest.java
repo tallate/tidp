@@ -126,8 +126,7 @@ public class RedisTest {
      */
     @Test
     public void testPutExpire() {
-        String luaStr = "redis.call('set', 'a', 'a')\n"
-                + "redis.call('expire', 'a', 10)";
+        String luaStr = "redis.call('set', 'a', 'a', 'EX', 10)";
         String sha = redisClient.loadScript(luaStr);
         Object res = redisClient.executeLua(sha, wrap(), wrap());
         System.out.println(res);

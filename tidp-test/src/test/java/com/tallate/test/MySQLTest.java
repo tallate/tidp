@@ -11,7 +11,6 @@ import javax.sql.DataSource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.jca.cci.connection.ConnectionFactoryUtils;
 import org.springframework.test.context.junit4.SpringRunner;
 
 /**
@@ -31,7 +30,7 @@ public class MySQLTest {
         .setId(UUID.randomUUID().toString())
         .setKeyState(KeyState.SUCCESS)
         .setContent("Hello".getBytes());
-    try(Connection conn = dataSource.getConnection()) {
+    try (Connection conn = dataSource.getConnection()) {
       PreparedStatement pstmt = conn.prepareStatement(sql);
       pstmt.setString(1, idpKey.getId());
       pstmt.setString(2, idpKey.getKeyState().name());

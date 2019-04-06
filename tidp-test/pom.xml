@@ -112,11 +112,13 @@
     </properties>
 
     <dependencies>
-        <dependency>
+        <!--如果测试MySQL，放开这里-->
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
-        </dependency>
+        </dependency>-->
 
+        <!--如果测试Redis，放开这里-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
