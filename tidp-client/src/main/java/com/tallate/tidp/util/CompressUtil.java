@@ -41,7 +41,6 @@ public class CompressUtil {
   }
 
   private static String extByGZIP(byte[] bytes, String encoding) throws IOException {
-    String ret;
     try (ByteArrayInputStream bi = new ByteArrayInputStream(bytes);
         GZIPInputStream gi = new GZIPInputStream(bi);
         ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -78,19 +77,24 @@ public class CompressUtil {
    * 使用zip格式压缩 1. 需要指定编码
    */
   private static byte[] compressByZip(String str, String encoding) throws IOException {
-    try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-        ZipOutputStream gzip = new ZipOutputStream(out)) {
-      gzip.write(str.getBytes(encoding));
-      return out.toByteArray();
-    }
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    ZipOutputStream gzip = new ZipOutputStream(out);
+    gzip.write(str.getBytes(encoding));
+    gzip.close();
+    return out.toByteArray();
   }
 
   private static String extByZip(byte[] bytes, String encoding) throws IOException {
-    String ret;
-    try (ZipInputStream gi = new ZipInputStream(new ByteArrayInputStream(bytes))) {
-      ret = FileUtil.readStream(gi, encoding);
+    try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ZipInputStream zi = new ZipInputStream(bais);
+        ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      byte[] buffer = new byte[1024];
+      int n;
+      while ((n = zi.read(buffer)) >= 0) {
+        out.write(buffer, 0, n);
+      }
+      return out.toString(encoding);
     }
-    return ret;
   }
 
 }
