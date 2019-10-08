@@ -1,4 +1,4 @@
-## TIdempotent
+## tidp
 
 ### [说明](http://tallate.github.io/d9c44370)
 
@@ -14,10 +14,10 @@
 因为测试代码是基于**SpringBoot**的，如果要使用一个中间件的客户端，只需要将对应的 starter 包作为依赖引入即可。
 ```xml
 <!--如果测试MySQL，放开这里-->
-<!--<dependency>
+<dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-jdbc</artifactId>
-</dependency>-->
+</dependency>
 
 <!--如果测试Redis，放开这里-->
 <dependency>
